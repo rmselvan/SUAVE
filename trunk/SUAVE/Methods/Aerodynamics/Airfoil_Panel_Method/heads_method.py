@@ -234,8 +234,12 @@ def odefcn(y,x,ReL_div_L, x_i, Ve_i, dVe_i):
         H1 = Ve_theta_H1 / theta / getVe(x,x_i,Ve_i)
 
     H           = getH(np.atleast_1d(H1))
+    if isinstance(H, np.ndarray):
+      H = H[0]
     Re_theta    = ReL_div_L * theta
     cf          = getcf(np.atleast_1d(Re_theta),np.atleast_1d(H))
+    if isinstance(cf, np.ndarray):
+        cf = cf[0]
     dydx_1      = 0.5*cf-(theta/getVe(x,x_i,Ve_i))*(2+H)*getdVe(x, x_i, dVe_i)
     dydx_2      = getVe(x,x_i,Ve_i)*0.0306*(H1 - 3)**-0.6169 
     f           = [dydx_1,dydx_2] 

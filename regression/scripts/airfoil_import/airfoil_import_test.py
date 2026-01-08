@@ -30,7 +30,9 @@ def main():
     ospath    = os.path.abspath(__file__)
     separator = os.path.sep 
     rel_path  = ospath.split('airfoil_import' + separator + 'airfoil_import_test.py')[0] + 'Vehicles' + separator + 'Airfoils' + separator
-    airfoil_geometry_with_selig =  [rel_path + 'NACA_4412.txt','airfoil_geometry_2.txt', 'airfoil_geometry_2-selig.txt']        
+    # Rohan added following line to be able to run this from SUAVE/ workspace folder
+    rel_path_airfoil_import = ospath.split('airfoil_import_test.py')[0]
+    airfoil_geometry_with_selig =  [rel_path + 'NACA_4412.txt', rel_path_airfoil_import + 'airfoil_geometry_2.txt', rel_path_airfoil_import + 'airfoil_geometry_2-selig.txt']        
     airfoil_geometry_files      = rel_path + 'NACA_4412.txt'
     airfoil_polar_files         =  [rel_path + 'Polars' + separator + 'NACA_4412_polar_Re_50000.txt',
                                      rel_path + 'Polars' + separator + 'NACA_4412_polar_Re_100000.txt',
@@ -79,7 +81,7 @@ def main():
     # assert (len(np.where(A_MASK_3)[0]) == 122051849)
     # assert (len(np.where(A_MASK_4)[0]) == 122051849)
 
-    plot_airfoil(airfoil_geometry_with_selig[1])
+    plot_airfoil(airfoil_geometry_with_selig[2])
 
     return  
 
