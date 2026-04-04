@@ -25,23 +25,29 @@ from SUAVE.Methods.Power.Battery.Sizing import initialize_from_mass
 # --------------------------------------------------------------------------------------------------
 # Main 
 # --------------------------------------------------------------------------------------------------
-
 def main():
   # Setup a Vehicle
   vehicle = setup_vehicle()
-
+  wing = vehicle.wings.main_wing
   # export the vehicle to OpenVSP
-  # write(vehicle, 'tutorialLC')
+  print("spans.projected (m)  :", wing.spans.projected)
+  print("spans.projected (ft) :", wing.spans.projected / Units.feet)
+  print("symmetric            :", wing.symmetric)
+  print("chords.root (m)      :", wing.chords.root)
+  print("chords.tip (m)       :", wing.chords.tip)
+  for seg in wing.Segments:
+      print(f"  Segment {seg.tag}: pct_span={seg.percent_span_location}, root_chord_pct={seg.root_chord_percent}")
+  write(vehicle, 'Hawkai')
 
   # Setup analyses
-  analyses = setup_analyses(vehicle)
-  analyses.finalize() # <-- this builds surrogate models! Important to call this
+  # analyses = setup_analyses(vehicle)
+  # analyses.finalize() # <-- this builds surrogate models! Important to call this
   
   # Setup a mission
-  mission = setup_mission(vehicle,analyses)
-  results = mission.evaluate()
+  # mission = setup_mission(vehicle,analyses)
+  # results = mission.evaluate()
 
-  make_plots(results)
+  # make_plots(results)
 
 # --------------------------------------------------------------------------------------------------
 # Plots
@@ -101,7 +107,6 @@ def setup_vehicle():
   # ------------------------------------------------------------------------------------------------
   # Initialize the Vehicle
   # ------------------------------------------------------------------------------------------------
-
   # Create a vehicle and set level properties
   vehicle = SUAVE.Vehicle()
   vehicle.tag = 'eVTOL'
@@ -119,10 +124,12 @@ def setup_vehicle():
   # ------------------------------------------------------------------------------------------------
   # WINGS
   # ------------------------------------------------------------------------------------------------
+  # TODO:
+  # - wing incidence needs to be added
   wing = SUAVE.Components.Wings.Main_Wing()
-  wing.origin = [[1.5,0.,-0.5]]
-  wing.spans.projected = 35.0 * Units.feet
-  wing.chords.root = 3.25 * Units.feet
+  wing.origin = [[1.215,0.,0.313]]
+  wing.spans.projected = 23. * Units.feet
+  wing.chords.root = 2.1 * Units.feet
   wing.exposed_root_chord_offset = 0.5
 
   # Segment
@@ -130,20 +137,24 @@ def setup_vehicle():
   segment.tag = 'Root'
   segment.percent_span_location = 0.
   segment.twist = 0.
-  segment.root_chord_percent = 1.5
+  segment.root_chord_percent = 1.
+  # not adjusted -----------------------------------
   segment.dihedral_outboard = 1.0 * Units.degrees
   segment.sweeps.quarter_chord = 8.5 * Units.degrees
-  segment.thickness_to_chord = 0.18
+  # not adjusted -----------------------------------
+  segment.thickness_to_chord = 0.12
   wing.Segments.append(segment)
 
   # Segment
   segment = SUAVE.Components.Wings.Segment()
   segment.tag = 'Section_2'
-  segment.percent_span_location = 0.227
+  segment.percent_span_location = 4. / 11.
   segment.twist = 0.
   segment.root_chord_percent = 1.
+  # not adjusted -----------------------------------
   segment.dihedral_outboard = 1.0 * Units.degrees
   segment.sweeps.quarter_chord = 0.0 * Units.degrees
+  # not adjusted -----------------------------------
   segment.thickness_to_chord = 0.12
   wing.Segments.append(segment)
 
@@ -154,8 +165,10 @@ def setup_vehicle():
   segment.twist = 0.
   segment.root_chord_percent = 1.
   segment.dihedral_outboard = 0.0 * Units.degrees
+  # not adjusted -----------------------------------
   segment.sweeps.quarter_chord = 0.0 * Units.degrees
   segment.thickness_to_chord = 0.12
+  # not adjusted -----------------------------------
   wing.Segments.append(segment)
 
   # Fill out more segment properties automatically
@@ -176,13 +189,16 @@ def setup_vehicle():
   # WING PROPERTIES
   wing = SUAVE.Components.Wings.Horizontal_Tail()
   wing.tag = 'horizontal_tail'
-  wing.areas.reference = 2.0
-  wing.taper = 0.5
-  wing.sweeps_quarter_chord = 20. * Units.degrees
+  wing.areas.reference = 10.0 * Units.feet * Units.feet
+  wing.taper = 1.
+  # wing.sweeps_quarter_chord = 20. * Units.degrees
+  wing.sweeps_quarter_chord = 0.
   wing.aspect_ratio = 5.0
-  wing.thickness_to_chord = 0.12
+  wing.thickness_to_chord = 0.09
+  # not adjusted -----------------------------------
   wing.dihedral = 5. * Units.degrees
-  wing.origin = [[5.5,0.,0.65]]
+  # ------------------------------------------------
+  wing.origin = [[((7.324 + .678*.5) - .25*wing.chords.root) * Units.feet ,0.,0.]]
 
   # Fill out wing properties automatically
   wing = wing_planform(wing)
@@ -193,12 +209,16 @@ def setup_vehicle():
   # Add a vertical tail
   wing = SUAVE.Components.Wings.Vertical_Tail()
   wing.tag = 'vertical_tail'
-  wing.areas.reference = 1.0
-  wing.taper = 0.5
-  wing.sweeps_quarter_chord = 30. * Units.degrees
-  wing.aspect_ratio = 2.5
-  wing.thickness_to_chord = 0.12
-  wing.origin = [[5.5,0.,0.65]]
+  wing.areas.reference = 8. * Units.feet * Units.feet
+  wing.taper = 1.
+  # wing.sweeps_quarter_chord = 20. * Units.degrees
+  wing.sweeps_quarter_chord = 0.
+  wing.aspect_ratio = 5.0
+  wing.thickness_to_chord = 0.09
+  # not adjusted -----------------------------------
+  wing.dihedral = 5. * Units.degrees
+  # ------------------------------------------------
+  wing.origin = [[8.75 * Units.feet,0.,0.]]
 
   # Fill out wing properties automatically
   wing = wing_planform(wing)
@@ -213,76 +233,83 @@ def setup_vehicle():
   fuselage = SUAVE.Components.Fuselages.Fuselage()
   fuselage.tag = 'fuselage'
   fuselage.seats_abreast = 2.
-  fuselage.fineness.nose = 0.88
-  fuselage.fineness.tail = 1.13
-  fuselage.lengths.nose  = 3.2 * Units.feet
-  fuselage.lengths.tail  = 6.4 * Units.feet
-  fuselage.lengths.cabin = 6.4 * Units.feet
-  fuselage.lengths.total = 6.0
-  fuselage.width = 5.85 * Units.feet
-  fuselage.heights.maximum = 4.65 * Units.feet
-  fuselage.heights.at_quarter_length = 3.75 * Units.feet
-  fuselage.heights.at_wing_root_quarter_chord = 4.65  * Units.feet
-  fuselage.heights.at_three_quarters_length = 4.26 * Units.feet
-  fuselage.areas.wetted = 236. * Units.feet**2
-  fuselage.areas.front_projected = 0.14 * Units.feet**2
-  fuselage.effective_diameter = 5.85 * Units.feet
+  fuselage.fineness.nose = .88
+  fuselage.fineness.tail = 1.
+  fuselage.lengths.nose  = 1.0 * Units.feet
+  fuselage.lengths.tail  = 1.8 * Units.feet
+  fuselage.lengths.nose  = 0.0 * Units.feet
+  fuselage.lengths.tail  = 0.0 * Units.feet
+  fuselage_total_length = 7.56 + (0.678 * .5)
+  fuselage.lengths.cabin = fuselage_total_length * Units.feet
+  # not adjusted -----------------------------------
+  fuselage.lengths.total = fuselage_total_length * Units.feet
+  # ------------------------------------------------
+  fuselage.width = 1.333 * Units.feet
+  fuselage.heights.maximum = 1.333 * Units.feet
+  fuselage.heights.at_quarter_length = 1.333 * Units.feet
+  fuselage.heights.at_wing_root_quarter_chord = 1.333  * Units.feet
+  fuselage.heights.at_three_quarters_length = 1.333 * Units.feet
+  fuselage.areas.wetted = 20. * Units.feet**2
+  fuselage.effective_diameter = 5.85 * Units.feet # TODO: verify this is appropriate
+  # not adjusted -----------------------------------
+  fuselage.areas.front_projected = .14 * Units.feet**2
   fuselage.differential_pressure = 0.
+  # ------------------------------------------------
 
-  # Segment 
+  # Segment - nose
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_0'
   segment.percent_x_location = 0.
-  segment.percent_z_location = -0.05
-  segment.height = 0.1
-  segment.width = 0.1
+  segment.percent_z_location = 0.
+  segment.height = 0.1 * Units.feet
+  segment.width = 0.1  * Units.feet
   fuselage.Segments.append(segment)
 
-  # Segment 
+  # Segment - first bulkhead
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_1'
-  segment.percent_x_location = 0.06
-  segment.percent_z_location = -0.05
-  segment.height = 0.52
-  segment.width = 0.75
+  segment.percent_x_location = (.286 + .678*.5) / fuselage_total_length
+  segment.percent_z_location = 0.
+  segment.height = .709 * Units.feet
+  segment.width =  .709 * Units.feet
   fuselage.Segments.append(segment)
 
-  # Segment 
+  # Segment - second bulkhead
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_2'
-  segment.percent_x_location = 0.25
-  segment.percent_z_location = -0.01
-  segment.height = 1.2
-  segment.width = 1.43
+  segment.percent_x_location = (1.6 + .678*.5) / fuselage_total_length
+  segment.percent_z_location = 0.
+  segment.height = 1.333 * Units.feet
+  segment.width =  1.333 * Units.feet
   fuselage.Segments.append(segment)
 
-  # Segment 
+  # Segment - Largest diameter H2 tank farthest away from nose to nose tip
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_3'
-  segment.percent_x_location = 0.475
+  segment.percent_x_location = (5.745 + .678*.5) / fuselage_total_length
   segment.percent_z_location = 0.
-  segment.height = 1.4
-  segment.width = 1.4
+  segment.height = 1.333 * Units.feet
+  segment.width =  1.333 * Units.feet
   fuselage.Segments.append(segment)
 
-  # Segment 
+  # Segment - Beginning of tail section closest to tip to nose tip
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_4'
-  segment.percent_x_location = 0.75
-  segment.percent_z_location = 0.06
-  segment.height = 0.6
-  segment.width = 0.4
+  segment.percent_x_location = (6.735 + .678*.5) / fuselage_total_length
+  segment.percent_z_location = 0.
+  segment.height = .453 * Units.feet
+  segment.width =  .453 * Units.feet
   fuselage.Segments.append(segment)
 
-  # Segment 
+  # Segment - Beginning of tail section closest to tip to nose tip
   segment = SUAVE.Components.Lofted_Body_Segment.Segment()
   segment.tag = 'segment_5'
   segment.percent_x_location = 1.
-  segment.percent_z_location = 0.1
-  segment.height = 0.05
-  segment.width = 0.05
+  segment.percent_z_location = 0.
+  segment.height = .453 * Units.feet
+  segment.width =  .453 * Units.feet
   fuselage.Segments.append(segment)
-
+  
   # Add to vehicle:
   vehicle.append_component(fuselage)
   
@@ -375,7 +402,7 @@ def setup_vehicle():
   propeller.design_thrust = 500. * Units.lbf
   ospath    = os.path.abspath(__file__)
   separator = os.path.sep 
-  rel_path = ospath.split('tutorialLC.py')[0] + 'regression' + separator + 'scripts' + separator + 'Vehicles' + separator
+  rel_path = ospath.split('Hawkai.py')[0] + 'regression' + separator + 'scripts' + separator + 'Vehicles' + separator
   # propeller.airfoil_geometry = [rel_path + 'Airfoils/NACA_4412.txt']
   # propeller.airfoil_polars = [[rel_path + 'Airfoils/Polars/NACA_4412_polar_Re_50000.txt', 
   #                              rel_path + 'Airfoils/Polars/NACA_4412_polar_Re_100000.txt',

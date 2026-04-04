@@ -1,0 +1,903 @@
+&JOB
+	INIT_input = 0,
+	INIT_data = 0,
+	ACT_error = 1,
+	ACT_version = 0,
+	OPEN_status = 1
+	&END
+
+&DEFN action='ident', created='02:09:57 21-Jan-2026', title='Hawkai Pre-flight', &END
+
+&DEFN quant='Cases', &END
+&VALUE
+	title = 'NDARC Job - from super comp',
+	subtitle1 = '',
+	subtitle2 = '',
+	subtitle3 = '',
+	TASK_Size = 0,
+	TASK_Mission = 0,
+	TASK_Perf = 0,
+	TASK_Map_engine = 0,
+	TASK_Map_aero = 0,
+	WRITE_input = 0,
+	OUT_design = 0,
+	FILE_design = 'Output\Design.design',
+	OUT_perf = 0,
+	FILE_perf = 'Output\Performance.perf',
+	OUT_geometry = 0,
+	FILE_geometry = 'Output\Geometry.geom',
+	OUT_aircraft = 0,
+	FILE_aircraft = 'Output\Aircraft.acd',
+	OUT_solution = 1,
+	FILE_solution = 'Output\Solution.soln',
+	OUT_sketch = 1,
+	FILE_sketch = 'Output\Sketch.dxf',
+	FILE_engine = 'Output\Engine.eng',
+	FILE_aero = 'Output\Aero.aero',
+OUT_error = 1,
+	FILE_error = 'Output\Error.err',
+	Units = 1,
+&END
+
+&DEFN action='configuration', &END
+&VALUE
+config='compound',
+&END
+
+&DEFN action='ident', title='Aircraft',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Aircraft', &END
+&VALUE title='HAWKAI',
+! Configuration
+	nRotor=5,  ! Number of Rotors
+	nWing=1,   ! Number of Wings
+	nTail=2,   ! Number of tails
+	nMotorModel=1  ! Motor Models
+	nEngineGroup=5	! Engine Groups
+	nPropulsion=5	! Propulsion Groups
+	nFuelCellModel=1	! Fuel Cell Charge group
+	nBatteryModel=1		! Battery model
+	nTank=2				! GH2 and Battery
+	nEngineModel=0		! No Engine Models
+	nChargeGroup=1		! FC charge group
+
+! Weight
+	DGW = 340., ! Design Gross Weight (WD), typically Takeoff weight for the primary mission
+	WE = 260.	! Weight Empty
+	fSDGW=0.8,
+	fWMTO=1.
+
+! Drag
+
+	FIX_drag=0   ! Calculate drag from components
+	FIX_DL=0     ! Calculated from components locations
+
+! Geometry
+	INPUT_geom=1, ! fixes geometry based on location inputs (See Geometry file for all locations)
+! Uses abritrary locations. Can set a reference point if needed for design to change all locations at once with respect to that ref point.
+! TODO ******** Check where the origins are and get this value ***** 
+
+! Aircraft Controls & Trim
+	ncontrol=4                  	! Number of Aircraft controls
+	nstate_trim=2					! Number of trim states
+	nstate_control=2                ! Number of control states (will call the same but they translate to different components)
+
+! Multicopter mode
+	IDENT_trim(1)='quad',		    ! Different trim states, match with IDENT_trim for the flight condition/ state
+	IDENT_control(1)='coll','latcyc','lngcyc','pedal',  ! Names of the aircraft controls for the quad state
+	mtrim(1)= 6, 
+!trim_var(1,1)='Vtip 1','Vtip 2','Vtip 3','Vtip 4'
+	trim_var(1,1)='coll','latcyc','lngcyc','pedal','pitch','roll',                      ! Trim variables which will be adjusted to meet equilibrium		
+	trim_quant(1,1)= 'force z','moment x','moment y','moment z','force x','force y',    ! Sequentially match variables which control aircraft equilibrium
+	trim_target(1,2) = 1,1,1,1,1,1,                                                     ! Sets trim targets in the flight state setup
+
+! Airplane mode
+
+	IDENT_trim(2)='airplane',
+!IDENT_control(2)='coll','latcyc','lngcyc','pedal', ! Names of the aircraft controls for the airplane state
+!mtrim(2)= 6,
+!trim_var(1,2)='coll','latcyc','lngcyc','pedal','pitch','roll',  ! Trim variables which will be adjusted to meet equilibrium
+	trim_quant(1,2)= 'force x','moment x','moment y','moment z','force z','force y',  ! Sequentially match variables which control aircraft equilibrium
+	trim_target(2,2) = 1,1,1,1,1,1, ! Sets trim targets in the flight state setup
+
+! Aerodynamics
+! Atmosphere
+	SET_atmos='std',	altitude=1000., ! Takeoff altitude and standard atmospheric conditions
+
+! Aircraft Motion
+! Available for trim depending on flight state. Each motion can be zero, constant or function of flight speed
+
+! Conversion
+! Available for speeds of converson. Depends on STATE_control, SET_Vtip, SET_tilt of FltState
+
+! Never exceed speed
+! Set VNE etc.
+
+! Velocity Schedules
+! use TAS or CAS
+&END
+
+&DEFN action='ident', title='Locations_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Geometry', &END
+&VALUE loc_cg%SL          = 3.06,	loc_cg%BL          =  0.000,	loc_cg%WL          = 0.08, !Center of Gravity Location
+    loc_fuselage%SL    =  1.50,	loc_fuselage%BL    =  0.000,	loc_fuselage%WL    = 0.00,
+    loc_wing(1)%SL     = 3.06,	loc_wing(1)%BL     =  0.000,	loc_wing(1)%WL     = 0.80, ! Main wing
+    loc_tail(1)%SL     = 8.75,	loc_tail(1)%BL     =  0.000,	loc_tail(1)%WL     = 0.00, ! Horizontal VTail
+    loc_tail(2)%SL     = 8.75,	loc_tail(2)%BL     =  0.000,	loc_tail(2)%WL     = 0.00, ! Vertical VTail
+	!loc_rotor(1)%SL	   = -0.35,loc_rotor(1)%BL	  =  3.937,loc_rotor(1)%WL    =0.4388 ! Rotor 1 FR
+	!loc_rotor(2)%SL	   = 7.524,loc_rotor(2)%BL	  =  -3.937,loc_rotor(2)%WL   =0.4388 ! Rotor 2 BL
+	!loc_rotor(3)%SL	   = -0.35,loc_rotor(3)%BL	  =  -3.937,loc_rotor(3)%WL   =0.4388 ! Rotor 3 FL
+	!loc_rotor(4)%SL	   = 7.524,loc_rotor(4)%BL	  =  3.937,loc_rotor(4)%WL    =0.4388 ! Rotor 4 FR
+	 loc_rotor(5)%SL	   = 8.408,	loc_rotor(5)%BL	  =  0.000,	loc_rotor(5)%WL    =0.0000 ! Rotor 5 Pusher
+	 
+	 loc_rotor(1)%SL    =3.06,	loc_rotor(1)%BL    =0.00,	loc_rotor(1)%WL    = 1.00, ! SET_geom=multirotor: center
+     loc_rotor(2)%SL    =3.06,	loc_rotor(2)%BL    =0.00,	loc_rotor(2)%WL    = 1.00, ! SET_geom=multirotor: center
+     loc_rotor(3)%SL    =3.06,	loc_rotor(3)%BL    =0.00,	loc_rotor(3)%WL    = 1.00, ! SET_geom=multirotor: center
+     loc_rotor(4)%SL    =3.06,	loc_rotor(4)%BL    =0.00,	loc_rotor(4)%WL    = 1.00, ! SET_geom=multirotor: center
+     
+     loc_pylon(1)%XoL    =0.00,	loc_pylon(1)%YoL    =0.00,	loc_pylon(1)%ZoL    = 0.00, ! SET_geom=multirotor: pylon relative hub
+     loc_pylon(2)%XoL    =0.00,	loc_pylon(2)%YoL    =0.00,	loc_pylon(2)%ZoL    = 0.00, ! SET_geom=multirotor: pylon relative hub
+     loc_pylon(3)%XoL    =0.00,	loc_pylon(3)%YoL    =0.00,	loc_pylon(3)%ZoL    = 0.00, ! SET_geom=multirotor: pylon relative hub
+     loc_pylon(4)%XoL    =0.00,	loc_pylon(4)%YoL    =0.00,	loc_pylon(4)%ZoL    = 0.00, ! SET_geom=multirotor: pylon relative hub 
+&END
+
+&DEFN action='ident', title='Fuselage_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Fuselage', &END
+&VALUE title='fuselage'
+	notes='Houses system components'
+
+! Geometry
+	! loc_fuselage - See Geometry file
+	SET_length=1						! Input fuselage length
+		Length_fus=8.,					! Fuselage length (ft)
+	SET_nose=1							! Input nose length
+		Length_nose=1.,					! Nose Length (ft)
+	SET_aft=1							! Input Aft Length
+		Length_aft=1.8,					! Aft Length (ft)
+	fRef_fus=0.25,						! Fraction of fuselage length of nose	
+	Width_fus=2.
+	Height_fus=2.
+	
+	SET_Swet=1,							! Fuselage wetted area input
+		Swet=20.						! Fuse Wetted area (ft^2) Surface area touching the airflow
+		Sproj=5.						! Fuse projected area (ft^2) reference area for vertical drag
+	
+! Aerodynamics
+	MODEL_aero=1						! Standard Aerodynamics Model for fuselage
+	! Aerodynamics, Standard Model
+	AoA_zl=0.							! Angle of attack for zero lift
+	AoA_max=10.							! Angle of attack for maximum lift
+	SET_lift=2							! Scale lift from CL
+		dCLda=0.						! Lift curve slope o the fuselage
+	SET_moment=2						! Scale Moment from Cm
+		CM0=0.							! Moment at zero lift
+		dCMda=0.						! Coefficient of moment slope
+	SS_zy=0.							! Sideslip angle for zero side force
+	SS_max=10.							! Sideslip angle for maximum sideforce (deg)
+	SET_side=2							! Scale side force from CY
+		dCYdb=0.						! Side Force Slope
+	SET_yaw=2							! Scale Yaw from CN
+		CN0=0.							! Moment at zero lift CN
+		dCNdb=0.						! Moment Slope
+	
+	! Drag, Standard Model
+	SET_drag=2							! Scale drag with CD
+	CD=0.004							! CD0 based on wetted area D/q=SCD
+	
+	
+! Weight
+	MODEL_weight=0
+	
+	! Fuselage Group, NDARC Weight Model
+	! Custom Weight Model
+
+
+! Controls
+! Flow Control
+! Tech Factors
+&END
+
+&DEFN action='ident', title='MotorModel_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='MotorModel', &END
+&VALUE title='Electric Motor'
+	ident='motor'
+
+! Weight
+	MODEL_weight=0
+	Wmotor=0.
+
+! Engine Ratings
+	nrate=1
+
+! Reference
+	P0_ref=26.
+
+! Performance
+	KIND_eff=1, eta_motor=0.9,	loss_motor=0.9
+&END
+
+&DEFN action='ident', title='GH2 Tank',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='FuelTank 1', &END
+&VALUE title='Fuel Tank - GH2',
+
+! Configuration
+	SET_burn=1
+
+	fuel_density=0.278			! Density of GH2 @ 400 bar lb/gallon
+	specific_energy=142.0		! Fuel Energy per weight
+
+	Wfuel_cap=8.0				! lbs
+	Waux_cap=0.1				! lbs
+&END
+
+&DEFN action='ident', title='Batteries',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='FuelTank 2', &END
+&VALUE title='Fuel Tank - Battery'
+	SET_burn=2
+	IDENT_battery='battery'
+
+	Efuel_cap=3.4 ! MJ
+
+! weight
+	eWtank=0.574		! MJ/kg for battery
+	eWauxtank=0.574 ! MJ/kg (650 Wh/kg uninstalled, 80% useable energy = 520 Wh/kg)
+	energy_density=2.25 ! MJ/L
+
+! aux tanks
+	Eaux_cap=0.1
+	DoQ_auxtank=0.
+&END
+
+&DEFN action='ident', title='Battery Model',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='BatteryModel', &END
+&VALUE title='Battery Model',
+	ident='battery',
+
+
+! Performance
+	Vref=4.2		! Volts/ cell
+	xmbd=32.		! Max discharge/hr
+	xCCmax=5.		! Max Charge /hr
+	DoDmin=.0		! Default, not sure
+	DoDmax=.8		! Default, not sure
+
+! Equivalent Circuit Model
+	KIND_eff=2
+	eta_dischrg=0.97
+	loss_dischrg=0.0
+	eta_chrg=0.97
+	loss_chrg=0.0
+
+&END
+
+&DEFN action='ident', title='Fuel Cells',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='FuelCellModel', &END
+&VALUE title='Fuelcell'
+	ident='FC'
+
+! No weight considerations
+	MODEL_weight=0
+	Wcell=0.0
+
+! Simple Model
+	P0_ref=6.4368		
+	sfc0C_ref=0.45		
+	Kmf=86.
+	ncell=1
+	vcell=1.0
+	idesign=20.
+	pi_comp=1.0
+
+!Kwt1_cell=9.0
+!sfc0C_ref=0.5
+!idesign=200.0
+!pi_comp=5.0
+!vcell=1.0
+&END
+
+&DEFN action='ident', title='FC Charge',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='ChargeGroup', &END
+&VALUE title='Fuel Cell Charge Group'
+	MODEL_charge='fuel'
+	IDENT_charge='FC'
+
+	nCharge=1
+	kFuelTank=2
+	kFuelTank_burn=1
+	Pchrg=6.4
+	rating_to='MCP'
+	INPUT_mode=0
+	INPUT_amp=0
+	nVamp=1
+!amp=1.0
+	Pmax=6.43				! Hp of FC System
+	eta_chrg=0.95			! Efficiency of Power Converts/ etc.
+
+!SW=5.
+&END
+
+&DEFN action='ident', title='Systems',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Systems', &END
+&VALUE 
+&END
+
+&DEFN action='ident', title='Emissions',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Emissions', &END
+&VALUE 
+&END
+
+&DEFN action='ident', title='Landing Gear',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='LandingGear', &END
+&VALUE 
+&END
+
+&DEFN action='ident', title='Cost',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Cost', &END
+&VALUE 
+&END
+
+&DEFN action='ident', title='Solution',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Solution', &END
+&VALUE 
+&END
+
+&DEFN action='ident', title='Wing',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Wing', &END
+&VALUE title='main wing'
+
+! Geometry
+	area=46.2					! Area of whole wing ft2
+	span=23.					! Span of Wing ft
+	!nPanel=2					! Sets number of panels
+	!SET_panel(1)='panel+XX'	! Inner panel span + chord, outer panel span+chord
+	!SET_panel(2)='span+free'
+	!span_panel(1)=4.			! Span of the inner panel
+	!span_panel(2)=7.			! Span of the outer panel
+	!chord_panel(1)=2.1			! Chord at start of two panels
+	!chord_panel(2)=2.1			! Span of the inner panel
+	thick=0.12					! Airfoil thickness
+	incid=5.					! Wing incidence (deg)
+	fDGW=1.						! Takes full weight for wing loading
+	
+! Control Surfaces
+	fchord_flaperon(1)=0.25		! Aileron fraction of panel chord 
+	fAC_aileron(1)=0.7			! Aileron AC center lateral position y
+	fspan_flaperon(1)=0.25		! Fraction of the span of the outer panel where an aileron is
+	eta0(1)=0.85				! Lift effectiveness factor
+	eta1(1)=0.43				! Lift effectiveness factors
+
+! Aerodynamics	(NACA->2412)(Re->1.22E06)
+	SET_lift=2		! Use 2D dCLda
+	dCLda=5.73		! 2D lift curve slope
+	AoA_zl=-2.5		! angle of attack at zero lift deg
+	CLmax=1.3		! Maximum CL value before stall
+	CD=0.0057		! Profile drag coefficient at zero aoa CD0
+	CDV=2.0			! Wing vertical drag coefficient		
+	CMac=-0.05		! Moment coefficient about the ac
+	Eind=0.85		! Oswold efficiency factor (Assume good tip shaping)
+	SET_compress=3	! No compressibility correction
+	! Drag
+		MODEL_drag = 2
+		AoA_Dmin=1.
+		Kdrag=0.0175
+		Xdrag=2.
+		MODEL_sep=3		! Cubic seperation model
+		Ksep=0.015		! K value from excel tune
+		Xsep=3.			! Tune to excel
+		AoA_sep=11.		! Angle of attack of seperation
+		
+! Interference
+	SET_wb=2		! Wing body interference
+	CD_wb=0.		! No interference considered for now
+
+! Controls
+	KIND_aileron(1)=3
+	INPUT_aileron(1)=1
+	!					  'coll', 'latcyc',	'lngcyc',  'pedal'
+	T_aileron(1,2,1)=		0.0,	1.0,	0.0,	  	 0.0
+	T_flaperon(1,2,1)=		0.0,	0.0,	0.0,		0.0
+	T_flaperon(1,1,1)=		0.0,	0.0,	0.0,		0.0
+! Weight
+	MODEL_weight=0		! Weight input model
+&END
+
+&DEFN action='ident', title='VTail-Horizontal',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Tail 1', &END
+&VALUE title='VTail Horiz'
+	KIND_tail=3
+	otherVtail=2
+
+! Geometry
+	SET_tail='area+aspect'		! Set VTail with the area and aspect ratio
+	AspectRatio=5.
+	area=10.	
+	incid=0.
+	taper=1.
+	sweep=0.
+	thick=0.09
+	
+	fchord_cont=0.25		! Control surface chord fraction
+	fspan_cont=0.8			! Control surface span fraction
+	
+! Controls
+	INPUT_cont=1			! Input T matrix
+			!Coll,    latcyc,    lngcyc,   rudder
+	T_cont(1,2)= 0.0,	0.0,       1.0,       0.0
+	
+! Aerodynamics	(NACA->0009)(Re->1.22E06)
+	SET_lift=2		! Use 2D airfoil dCLda
+	dCLda=6.05		! 2D lift curve slope
+	AoA_zl=0.		! angle of attack at zero lift deg
+	CLmax=1.1		! Maximum CL value before stall
+	CD=0.0055		! Profile drag coefficient at zero aoa CD0
+	CDV=2.0			! Wing vertical drag coefficient		
+	Eind=0.8		! Oswold efficiency factor (Assume good tip shaping)
+	SET_compress=3	! compressibility correction included
+	eta0=0.85
+	eta1=0.43
+	
+	! Drag Model
+		MODEL_drag = 2
+		AoA_Dmin=0.
+		Kdrag=0.0218
+		Xdrag=2.
+! Weight
+	MODEL_weight=0
+	
+	
+	
+&END
+
+&DEFN action='ident', title='VTail-Vertical',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Tail 2', action='copy', source=1, &END
+
+&DEFN quant='Tail 2', &END
+&VALUE title='VTail Vert'
+
+	KIND_tail=4
+	area=8.
+	T_cont(1,2)=0.0,0.0,0.0,1.0
+	otherVtail=1
+&END
+
+&DEFN action='ident', title='Prop 1_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Propulsion 1', &END
+&VALUE title='Lifter 1- Propulsion System'
+	notes='front right lifter'
+	STATE_gear_var=1
+
+! Control
+	INPUT_DN=1,
+	nVDN=1
+
+!			coll  latcyc lngcyc pedal
+!T_DN(1,1)=  1., -.5,  .5,  -.5  
+
+! Drive System
+	nGear=1
+
+! Weight
+	! Leave alone for now. Ideally make all this stuff zero and just input the cg and weight for performance analysis
+
+! Transmission losses
+	! Set to 0
+	MODEL_Xloss=2, ! Sets loss with function drive shaft limit
+	fPloss_xmsn=0.,
+
+! Accessory Losses
+	! All set to 0
+
+! Geometry
+
+
+! Drive system torque limit
+	Plimit_ds=26.
+
+! Drive system ratings
+
+
+&END
+
+&DEFN action='ident', title='Prop 2_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Propulsion 2', action='copy', source=1, &END
+
+&DEFN quant='Propulsion 2', &END
+&VALUE title='Lifter 2- Propulsion System'
+	notes='Back left lifter'
+
+
+!T_DN(1,1)= 1.,.5,-.50,-.50
+&END
+
+&DEFN action='ident', title='Prop 3_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Propulsion 3', action='copy', source=1, &END
+
+&DEFN quant='Propulsion 3', &END
+&VALUE title='Lifter 3- Propulsion System'
+	notes='Front left lifter'
+
+
+!T_DN(1,1)= 1.,.50,.50,.50
+&END
+
+&DEFN action='ident', title='Prop 4_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Propulsion 4', action='copy', source=1, &END
+
+&DEFN quant='Propulsion 4', &END
+&VALUE title='Lifter 4- Propulsion System'
+	notes='Back right lifter'
+
+
+!T_DN(1,1)= 1.,-.50,-.50,.50
+&END
+
+&DEFN action='ident', title='Prop 5_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Propulsion 5', action='copy', source=1, &END
+
+&DEFN quant='Propulsion 5', &END
+&VALUE title='Pusher- Propulsion System'
+	notes='Pusher'
+
+!T_DN(1,1)=0.0,0.0,0.0,0.0
+!T_DN(1,2)= 1.0,0.0,0.0,0.0
+&END
+
+&DEFN action='ident', title='Lifter 1_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Rotor 1', &END
+&VALUE title='Lifter Prop'
+	notes='Front Right rotor model'
+	config="main+multirotor+stop"
+
+
+! Propulsion Group
+	kPropulsion=1			! Connection to a particular propulsion group
+	KIND_xmsn=1				! Refers to main rotor, not dependent on any other rotors with gear ratios
+	Vtip_ref=83.3			! Reference tip speed (based on 4 ft diameter rotor at 2505 RPM and 154 kg MTOW)
+	INPUT_gear=1			! No gear ratio to input (for dependent branch)
+
+! Default rotor tip speeds
+	INPUT_Vtip=2			! input form, can be dependent on a rpm ratio
+	nVrpm=1					! number of speeds for flight envelope (1 is constant)
+	
+! Drive system torque limit (Used for sizing, can be used for max effort)
+	SET_limit_rs=0
+	Plimit_rs=15.			! horsepower maximum for the lifters. limited by the torque max of the motor
+
+! Parameters
+	Radius=2.				! Radius in feet
+	sigma=0.076				! sigma based on Mejzlik 3 quarter chord data
+	fDGW=0.25				! Fraction of Design Gross Weight for Disk Loading Each rotor is 0.25?
+
+! Geometry
+	SET_geom='multicopter'
+	len_multicopter=2.86
+	ang_multicopter=45.
+	
+	rotate=1				! Direction of rotation 1 for CCW
+	nBlade=2
+	
+	! Planform and twist
+		SET_chord=2		! Set chord linear from taper
+		taper=0.8		! tip chord over root chord
+		
+		SET_twist=1		! Set twist linear from twistL
+		twistL=-15.		! linear twist from root to tip
+		
+	! Flap Dynamics
+		KIND_hub=2		! Set a hingless hub
+		flapfreq=1.25	! set the flap frequency
+		gamma=4.		! Set the locke number
+		
+	! Aerodynamics
+		dclda = 6.3		! set blade lift curve slope
+		tiploss=0.98	! Set the tip loss
+		xroot=0.1		! Set the root percentage of the blade
+		thick=0.12		! Set the thickness to chord ratio of the blade, only used for graphics...
+		
+	! BET Solution calculation
+		mr=4
+		mpsi=8
+		
+	! Controls
+		KIND_control=4	! Rotor control mode is thrust and TPP Shouldn't effect anything as we are using the propulsion group for controls
+		INPUT_coll=1
+		INPUT_lngcyc=0
+		INPUT_latcyc=0
+		
+		T_coll(1,1)=  1., -0.5,  0.5,  1.
+		T_coll(1,2)=0.,0.,0.,0.
+		T_lngcyc(1,1)=0.0,0.0 ,0.0,0.0
+		T_latcyc(1,1)=0.0,0.0,0.0,0.0
+	
+	! Trim Targets
+		! Default...
+	! Rotor Thrust capability
+		! Default...
+	! Performance
+		! Default...
+	! Interference
+		MODEL_int=0		! Don't model interference
+	
+	! Geometry
+		SET_Spylon=1		! Set Pylon wetted area
+		Swet_pylon=0.1		! Pylon wetted area
+		
+	! Drag
+		MODEL_drag=1		! Standard drag model
+	! Download and Blockage
+		MODEL_download=0	! Don't model the download effects for now
+		
+	! Weight
+		MODEL_weight=0		! Input the weight
+		
+	! Induced power
+		MODEL_ind=2	! Standard induced power model with defaults	
+	! Climb Power
+		MODEL_climb=0		
+	! Momentum Theory
+		! Defaults...	
+	! Ground Effect
+		! Defaults...
+	! Twin Rotors
+ 		! Not modeled for now
+	
+	! profile power
+     	MODEL_basic=2,
+     	CTs_Dmin=.08,	d0_hel=.0080,	d0_prop=.0080,	d1_hel=.005,	d1_prop=.005,	d2_hel=.02,	d2_prop=.02,
+     	dprop=0.,	Xprop=2.,	CTs_sep=.10,	dsep=0.,	Xsep=4.,	df1=.001,	df2=.005,	Xf=3.,
+     	
+ 	! Stall model
+     	MODEL_stall=1,	nstall=12,
+        	mu_stall=0.,.05,.10,.15,.20,.25,.30,.35,.40,.50,.60,.80,
+        	CTs_stall=.17,.155,.14,.13,.13,.135,.135,.13,.125,.12,.12,.12,
+     	fstall=1.,	dstall1=.05,	dstall2=0.,	Xstall1=1.,	Xstall2=3.,
+ 	
+ 	! Compressability Model
+     	MODEL_comp=1,	Mdd0=.79,	Mddcl=0.,	dm1=.01,	dm2=1.,	Xm=2.7,
+     	
+ 	! Twin Rotors
+ 		! Not modeled for now
+	
+	! Rotor Drag
+		SET_Dhub=2,	SET_Vhub=2,	SET_Dpylon=2
+		CD_hub=0.005
+		CDV_hub=0.005
+		CD_pylon=0.005			! CD based on pylon area
+		CD_bladestop=0.025		! CD based on blade area
+		CD_hubstop=0.005		! CD based on rotor area
+		
+	! Rotor Interference standard model
+		! Defaults...
+	! Induced power interference at wing
+		! Defaults...
+	! Rotor Group NDARC Weight model
+		! Default...
+	&END
+
+&DEFN action='ident', title='Lifter 2_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Rotor 2', action='copy', source=1, &END
+
+&DEFN quant='Rotor 2', &END
+&VALUE notes='Back Left Rotor Model'
+	kpropulsion=2
+	rotate=1
+	ang_multicopter=225.
+
+		T_coll(1,1)=  1.,.5,-.50,1.
+		T_coll(1,2)=0.,0.,0.,0.
+&END
+
+&DEFN action='ident', title='Lifter 3_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Rotor 3', action='copy', source=1, &END
+
+&DEFN quant='Rotor 3', &END
+&VALUE title='Lifter Prop FR'
+	kpropulsion=3
+	rotate=-1
+	ang_multicopter=315.
+
+		T_coll(1,1)=  1., .5,  .5,  -1.
+		T_coll(1,2)=0.,0.,0.,0.
+&END
+
+&DEFN action='ident', title='Lifter 4_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Rotor 4', action='copy', source=1, &END
+
+&DEFN quant='Rotor 4', &END
+&VALUE title='lifter prop BR'
+	kPropulsion=4
+	rotate=-1
+	ang_multicopter=135.
+		T_coll(1,1)=  1.,-.50,-.50,-1.
+		T_coll(1,2)=0.,0.,0.,0.
+&END
+
+&DEFN action='ident', title='Pusher_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='Rotor 5', &END
+&VALUE title='Pusher rotor'
+	config='prop', direction='+x'
+	radius=1.67
+	kPropulsion=5, fArea=1.,	fDGW=1.
+	Vtip_ref=100.
+	sigma=0.076		! Based on 1.67 radius and Mejzlik data for pusher 0.75 chord
+	rotate=-1
+	nBlade=2
+	KIND_hub=2,	flapfreq=1.25,	gamma=4., ! hingeless
+	dclda=5.7,	tiploss=.97,	xroot=0.10,	thick=.12,
+
+	SET_geom='std',
+
+	incid_hub=0.,	cant_hub=0.,
+
+! Control
+	KIND_control=1 ! pitch and NFP, should be used in aircraft controls
+	INPUT_coll=1
+	INPUT_lngcyc=0
+	INPUT_latcyc=0
+	T_coll(1,1)=  0.,0.,0.,0.
+	T_coll(1,2)=1.,0.,0.,0.
+	T_lngcyc(1,1)=0.0,0.0 ,0.0,0.0
+	T_latcyc(1,1)=0.0,0.0,0.0,0.0	
+	
+! Drive system torque limit (Used for sizing, can be used for max effort)
+	SET_limit_rs=0
+	Plimit_rs=15.			! horsepower maximum for the lifters. limited by the torque max of the motor
+
+! Hingless Rotor model
+     MODEL_Ftpp=2,	MODEL_Fpro=2,
+     
+! induced power
+     Ki_hover=1.08,	Ki_climb=1.08,	Ki_prop=1.85,	Ki_edge=1.85,	Ki_min=1.05,
+     CTs_Hind=.06,	kh1=1.5,	kh2=-5.,	CTs_Pind=.06,	kp1=1.5,	kp2=-5.,	CTs_Tind=.12,	kt1=-2.,	kt2=0.,
+     mu_edge=0.3,	ke1=0.,	ke2=0.,	ke3=1.,	Xe=3.,	mu_prop=1.,	ka1=0.,	ka2=0.,	ka3=0.,
+! profile power
+     MODEL_basic=2,
+     CTs_Dmin=.08,	d0_hel=.0088,	d0_prop=.0088,	d1_hel=.0,	d1_prop=.0,	d2_hel=.045,	d2_prop=.045,
+     dprop=0.,	Xprop=2.,	CTs_sep=.10,	dsep=0.,	Xsep=4.,	df1=-.0011,	df2=.015,	Xf=3.,
+     MODEL_stall=1,	nstall=12,
+        mu_stall=0.,.05,.10,.15,.20,.25,.30,.35,.40,.50,.60,.80,
+        CTs_stall=.17,.165,.16,.155,.155,.155,.15,.15,.15,.15,.15,.15,
+     fstall=1.,	dstall1=2.,	dstall2=10.,	Xstall1=2.,	Xstall2=3.,
+     MODEL_comp=1,	Mdd0=.79,	Mddcl=0.,	dm1=.01,	dm2=1.,	Xm=2.7,
+ ! Interference
+ 	!Ignore for now
+ 	MODEL_int=0
+! Drag
+     SET_Spylon=1,	Swet_pylon=1., ! 1/2 of boom
+     SET_Dhub=2,	SET_Vhub=2,	SET_Dpylon=2,	SET_Vpylon=2,
+     CD_hub=0.0015,	CDV_hub=0.0015,
+     CD_pylon=0.0045,	CDV_pylon=0.0045, ! low drag pylon
+! Weight
+	MODEL_weight=0	! Don't model the individual weight
+&END
+
+&DEFN action='ident', title='Engine 1_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='EngineGroup 1', &END
+&VALUE title='Front Right Motor'
+
+! Propulsion Group
+	kPropulsion=1
+	kFuelTank=2
+	nEngine=1,	nEngine_main=1,	fPsize=1.,
+! Description
+	MODEL_engine='motor',	IDENT_engine='motor',
+	Peng=26.,	rating_to='MCP',
+	SET_geom=0,	SET_Swet=2,	kSwet=0.8,
+
+! Weight
+	MODEL_weight=0
+	
+! torque limit
+	Plimit_es=26.
+
+! Drag
+	MODEL_drag=0
+
+! Installation
+	gear=1.
+	INPUT_gear=2
+
+&END
+
+&DEFN action='ident', title='Engine 2_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='EngineGroup 2', action='copy', source=1, &END
+
+&DEFN quant='EngineGroup 2', &END
+&VALUE title='Back left motor'
+
+	kPropulsion=2
+&END
+
+&DEFN action='ident', title='Engine 3_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='EngineGroup 3', action='copy', source=1, &END
+
+&DEFN quant='EngineGroup 3', &END
+&VALUE title='Front left motor'
+
+	kPropulsion=3
+&END
+
+&DEFN action='ident', title='Engine 4_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='EngineGroup 4', action='copy', source=1, &END
+
+&DEFN quant='EngineGroup 4', &END
+&VALUE title='Back right motor'
+
+	kPropulsion=4
+&END
+
+&DEFN action='ident', title='Engine 5_(1)',
+	created='02:09:52 21-Jan-2026', &END
+
+&DEFN quant='EngineGroup 5', action='copy', source=1, &END
+
+&DEFN quant='EngineGroup 5', &END
+&VALUE title='Pusher'
+
+	kPropulsion=5
+&END
+
+&DEFN action='nosize', &END
+&VALUE
+&END

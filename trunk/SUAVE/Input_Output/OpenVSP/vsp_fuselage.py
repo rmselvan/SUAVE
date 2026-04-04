@@ -384,7 +384,8 @@ def write_vsp_fuselage(fuselage,area_tags, main_wing, fuel_tank_set_ind, OML_set
         # Tail
         if heights[-1] > 0.:
             stdout = vsp.cvar.cstdout
-            errorMgr = vsp.ErrorMgrSingleton_getInstance()
+            # errorMgr = vsp.ErrorMgrSingleton_getInstance()
+            errorMgr = vsp.ErrorMgrSingleton.getInstance()
             errorMgr.PopErrorAndPrint(stdout)
 
             pos = len(heights)-1
