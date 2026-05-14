@@ -120,3 +120,52 @@ Extended `run.py` with a mission selector so the user can run any of the five mi
 - **`getattr(analyses.missions, key)`** — idiomatic way to index a SUAVE `Data`/`Container` object by string key, avoiding a brittle `if/elif` chain.
 - **`plt.show()` deferred to end of loop** — all figure windows appear together after all evaluations complete rather than blocking after each mission.
 - **`figs_before` / `figs_after` diff in `make_plots`** — safely identifies only the figures created by the current call so titles are not applied to pre-existing windows from a previous loop iteration.
+
+---
+
+## 2026-04-04 — Update Vehicle to Match NDARC Parameters
+
+### Summary
+
+Updated `Hawkai/parameters.py` and `Hawkai/vehicle.py` to faithfully reflect the Hawkai NDARC input file (`Hawkai_Input.txt`). Lift-rotor spatial positions (origins and rotations) were preserved per user instruction.
+
+### What changed and where
+
+| File | Parameter | Old | New | Source |
+|------|-----------|-----|-----|--------|
+| `parameters.py` | `TAKEOFF_MASS` | 2500 lb | **340 lb** | NDARC DGW |
+| `parameters.py` | `OPERATING_EMPTY_MASS` | 2150 lb | **260 lb** | NDARC WE |
+| `parameters.py` | `MAX_TAKEOFF_MASS` | 2500 lb | **340 lb** | fWMTO=1.0 |
+| `parameters.py` | `MAX_PAYLOAD_MASS` | 100 lb | **80 lb** | DGW−WE |
+| `parameters.py` | `CENTER_OF_GRAVITY` | `[[2.0,0,0]]` m | **`[[0.933,0,0]]`** m | SL=3.06 ft |
+| `parameters.py` | `WING_ORIGIN` | `[[1.215,0,0.313]]` | **`[[0.933,0,0.244]]`** | SL=3.06 ft, WL=0.80 ft |
+| `parameters.py` | `WING_INCIDENCE` *(new)* | — | **5.0°** | NDARC wing incidence |
+| `parameters.py` | `HTAIL_STATION_LINE` *(new)* | — | **8.75 ft** | NDARC htail SL |
+| `parameters.py` | `FUSELAGE_TOTAL_LENGTH` | 7.899 ft | **8.0 ft** | NDARC |
+| `parameters.py` | `FUSELAGE_WIDTH` | 1.333 ft | **2.0 ft** | NDARC |
+| `parameters.py` | `FUSELAGE_HEIGHT` | 1.333 ft | **2.0 ft** | NDARC |
+| `parameters.py` | `FUSELAGE_EFF_DIAMETER` | 5.85 ft | **2.0 ft** | matches width |
+| `parameters.py` | `LIFT_ROTOR_TIP_RADIUS` | 1.5 m | **0.6096 m** | 2 ft per NDARC |
+| `parameters.py` | `LIFT_ROTOR_HUB_RADIUS` | 0.15 m | **0.0610 m** | 10% root cutout |
+| `parameters.py` | `LIFT_ROTOR_N_BLADES` | 4 | **2** | NDARC |
+| `parameters.py` | `LIFT_ROTOR_DESIGN_TIP_MACH` | 0.65 | **0.0746** | Vtip=83.3 ft/s |
+| `parameters.py` | `PROP_TIP_RADIUS` | 0.9 m | **0.5090 m** | 1.67 ft per NDARC |
+| `parameters.py` | `PROP_HUB_RADIUS` | 0.1 m | **0.0509 m** | 10% of tip radius |
+| `parameters.py` | `PROP_N_BLADES` | 3 | **2** | NDARC |
+| `parameters.py` | `PROP_RPM` | 2200 rpm | **572 rpm** | Vtip=100 ft/s, R=1.67 ft |
+| `parameters.py` | `PROP_DESIGN_THRUST` | 500 lbf | **68 lbf** | scaled × (340/2500) |
+| `parameters.py` | `LIFT_MOTOR_EFFICIENCY` | 0.85 | **0.90** | NDARC eta_motor |
+| `parameters.py` | `PROP_MOTOR_EFFICIENCY` | 0.95 | **0.90** | NDARC eta_motor |
+| `vehicle.py` | Wing segment twist (Root, Section_2, Tip) | 0° | **P.WING_INCIDENCE (5°)** | NDARC incidence |
+| `vehicle.py` | Htail `wing.origin` formula | hardcoded 7.324 ft ref | **`P.HTAIL_STATION_LINE − 0.25×chord`** | NDARC SL=8.75 ft |
+
+### What was NOT changed
+- Lift-rotor `LIFT_ROTOR_ORIGINS` and `LIFT_ROTOR_ROTATIONS` — preserved per user instruction
+- Boom geometry — tied to rotor lateral positions
+- Wing planform (span, chord, sweep, dihedral, t/c) — already matched NDARC
+- Tail planform (area, AR, taper, sweep, t/c) — already matched NDARC
+- `VTAIL_ORIGIN_X` (8.75 ft) — already correct
+- Battery, ESC, avionics, airfoils, mission profile
+
+### Verification
+`python3 Hawkai.py` ran to completion with exit code 0. OpenVSP "Diameter" warnings are pre-existing cosmetic issues unrelated to these changes.

@@ -47,7 +47,7 @@ def vehicle_setup():
     segment = SUAVE.Components.Wings.Segment()
     segment.tag                    = 'Root'
     segment.percent_span_location  = 0.
-    segment.twist                  = 0.
+    segment.twist                  = P.WING_INCIDENCE
     segment.root_chord_percent     = 1.
     segment.dihedral_outboard      = P.ROOT_SEG_DIHEDRAL
     segment.sweeps.quarter_chord   = P.ROOT_SEG_SWEEP_QC
@@ -57,7 +57,7 @@ def vehicle_setup():
     segment = SUAVE.Components.Wings.Segment()
     segment.tag                    = 'Section_2'
     segment.percent_span_location  = P.SEC2_SEG_PCT_SPAN
-    segment.twist                  = 0.
+    segment.twist                  = P.WING_INCIDENCE
     segment.root_chord_percent     = 1.
     segment.dihedral_outboard      = P.SEC2_SEG_DIHEDRAL
     segment.sweeps.quarter_chord   = P.SEC2_SEG_SWEEP_QC
@@ -67,7 +67,7 @@ def vehicle_setup():
     segment = SUAVE.Components.Wings.Segment()
     segment.tag                    = 'Tip'
     segment.percent_span_location  = 1.0
-    segment.twist                  = 0.
+    segment.twist                  = P.WING_INCIDENCE
     segment.root_chord_percent     = 1.
     segment.dihedral_outboard      = P.TIP_SEG_DIHEDRAL
     segment.sweeps.quarter_chord   = P.TIP_SEG_SWEEP_QC
@@ -90,7 +90,7 @@ def vehicle_setup():
     wing.thickness_to_chord    = P.HTAIL_T_C
     wing.dihedral              = P.HTAIL_DIHEDRAL
     wing = wing_planform(wing)
-    wing.origin = [[((7.324 + .678 * .5) - .25 * wing.chords.root) * Units.feet, 0., 0.]]
+    wing.origin = [[P.HTAIL_STATION_LINE - 0.25 * wing.chords.root, 0., 0.]]
     vehicle.append_component(wing)
 
     # ── Vertical tail ─────────────────────────────────────────────────────────
